@@ -3,7 +3,9 @@ package cn.itcast.canal.bean;
 import cn.itcast.canal.protobuf.CanalModel;
 import cn.itcast.canal.protobuf.ProtoBufable;
 import com.alibaba.fastjson.JSON;
+import com.google.protobuf.InvalidProtocolBufferException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -98,6 +100,30 @@ public class CanalRowData implements ProtoBufable {
         this.columns = columns;
     }
 
+
+    /**
+     * 传递一个字节码数据，将字节码数据反序列化成对象
+     * @param bytes
+     */
+   public CanalRowData(byte[] bytes){
+       try {
+           //将字节码数据反序列化成对象
+           CanalModel.RowData rowData = CanalModel.RowData.parseFrom(bytes);
+           this.logfilename = rowData.getLogfileName();
+           this.logfileoffset = rowData.getLogfileOffset();
+           this.executeTime = rowData.getExecuteTime();
+           this.schemaName = rowData.getSchemaName();
+           this.tableName = rowData.getTableName();
+           this.eventType = rowData.getEventType();
+
+           //将所有列的集合添加到map中
+           this.columns = new HashMap<>();
+           this.columns.putAll(rowData.getColumnsMap());
+
+       } catch (InvalidProtocolBufferException e) {
+           e.printStackTrace();
+       }
+   }
 
     /**
      * 学要将map对象解析出来的参数，赋值给protobuf对象，然后序列化后字节码返回

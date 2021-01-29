@@ -1,5 +1,6 @@
 package cn.itcast.shop.realtime.etl.app
 
+import cn.itcast.shop.realtime.etl.process.SyncDimData
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
 import org.apache.flink.streaming.api.CheckpointingMode
@@ -58,6 +59,10 @@ object App {
       List("hadoop", "hive", "spark")
     ).print()
 
+    //TODO 5： 实现所有的 ETL 业务
+
+    // 5.1 维度表的数据增量到Redis中
+    val data: SyncDimData = new SyncDimData(env)
     //TODO 6：执行任务
     env.execute()
   }
