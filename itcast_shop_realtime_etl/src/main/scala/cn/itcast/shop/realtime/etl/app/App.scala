@@ -54,15 +54,17 @@ object App {
     //程序出现异常的时候，会进行重启，重启五次，每次延迟5秒钟，如果超过了五次，程序退出
     env.setRestartStrategy(RestartStrategies.fixedDelayRestart(5, 5000))
 
-    // 4. 编写测试代码，测试Flink程序是否能够正确执行
-    env.fromCollection(
-      List("hadoop", "hive", "spark")
-    ).print()
+//    // 4. 编写测试代码，测试Flink程序是否能够正确执行
+//    env.fromCollection(
+//      List("hadoop", "hive", "spark")
+//    ).print()
 
     //TODO 5： 实现所有的 ETL 业务
 
     // 5.1 维度表的数据增量到Redis中
-    val data: SyncDimData = new SyncDimData(env)
+    val syncDataProcess: SyncDimData = new SyncDimData(env)
+    syncDataProcess.process()
+
     //TODO 6：执行任务
     env.execute()
   }

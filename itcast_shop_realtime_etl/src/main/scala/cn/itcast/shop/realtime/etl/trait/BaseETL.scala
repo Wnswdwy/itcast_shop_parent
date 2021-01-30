@@ -20,5 +20,5 @@ trait BaseETL[T]{
   /**
    * 根据业务可以抽取出操作方法，因为所有ETL都会有擦作方法
    */
-  def process(topic:String)
+  def process()
 }
