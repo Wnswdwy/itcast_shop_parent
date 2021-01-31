@@ -33,9 +33,4 @@ abstract class MysqlBaseETL(env:StreamExecutionEnvironment)  extends BaseETL[Can
     //返回消费到的数据
     canalDataStream
   }
-
-  /**
-   * 根据业务可以抽取出操作方法，因为所有ETL都会有擦作方法
-   */
-  override def process(topic: String): Unit = ???
 }
