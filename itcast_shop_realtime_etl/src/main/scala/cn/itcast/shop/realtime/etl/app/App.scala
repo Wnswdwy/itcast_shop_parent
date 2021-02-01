@@ -1,6 +1,7 @@
 package cn.itcast.shop.realtime.etl.app
 
-import cn.itcast.shop.realtime.etl.process.SyncDimData
+import cn.itcast.shop.realtime.etl.process.{ClickLogDataETL, OrderDataETL, SyncDimData, orderDetailDataETL}
+import cn.itcast.shop.realtime.etl.utils.GlobalConfigUtil
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
 import org.apache.flink.streaming.api.CheckpointingMode
@@ -59,11 +60,25 @@ object App {
 //      List("hadoop", "hive", "spark")
 //    ).print()
 
+    //使用分布式缓存将ip地址资源库数据拷贝到TaskManage节点上
+    env.registerCachedFile(GlobalConfigUtil.`ip.file.path`,"qqwry.dat")
+
     //TODO 5： 实现所有的 ETL 业务
 
     // 5.1 维度表的数据增量到Redis中
     val syncDataProcess: SyncDimData = new SyncDimData(env)
     syncDataProcess.process()
+
+    //5.2 点击日志的事实ETL
+    val clickLog : ClickLogDataETL = new ClickLogDataETL(env)
+    clickLog.process()
+
+    //5.3 订单数据的实时ETL
+    val orderProcess: OrderDataETL = OrderDataETL(env)
+    orderProcess.process()
+
+    //5.4 订单明细数据的ETL
+    val orderDetailProcess: orderDetailDataETL = new orderDetailDataETL(env)
 
     //TODO 6：执行任务
     env.execute()
