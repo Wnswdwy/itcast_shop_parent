@@ -71,5 +71,81 @@ case class orderDetailDataETL(env: StreamExecutionEnvironment) extends MysqlBase
     })
     //4. 将拉宽后的订单明细表的数据写入到HBase中，供后续订单明细详细数据的查询
     orderGoodsWideJsonDataStream.addSink(kafkaProducer(GlobalConfigUtil.`output.topic.order_detail`))
+
+    //5. 将拉宽后的订单明细数据保存到HBase中
+    orderGoodsWideEntityDataStream.addSink(new RichSinkFunction[OrderGoodsWideEntity] {
+      //定义HBase的连接对象
+        var connection : Connection = _
+      //定义HBase的表
+        var table : Table = _
+      override def open(parameters: Configuration): Unit = {
+        //初始化HBase的连接对象
+        connection = HbaseUtil.getPool().getConnection
+        table = connection.getTable(TableName.valueOf(GlobalConfigUtil.`hbase.table.orderdetail`))
+      }
+
+      //关闭连接，释放资源
+      override def close(): Unit = {
+        if(table != null) table.close()
+        if(!connection.isClosed) {
+          //将连接释放回连接池
+          HbaseUtil.getPool().returnConnection(connection)
+        }
+      }
+
+      //将数据一条一条写入到HBase中
+      override def invoke(orderGoodsWideEntity: OrderGoodsWideEntity, context: SinkFunction.Context[_]): Unit = {
+            //构建put对象,使用订单明细id作为RowKey
+          val  rowKey = Bytes.toBytes(orderGoodsWideEntity.getOgId)
+          val put = new Put(rowKey)
+            //创建列族
+          var family = Bytes.toBytes(GlobalConfigUtil.`hbase.table.family`)
+
+        val ogIdCol = Bytes.toBytes("ogId")
+        val orderIdCol = Bytes.toBytes("orderId")
+        val goodsIdCol = Bytes.toBytes("goodsId")
+        val goodsNumCol = Bytes.toBytes("goodsNum")
+        val goodsPriceCol = Bytes.toBytes("goodsPrice")
+        val goodsNameCol = Bytes.toBytes("goodsName")
+        val shopIdCol = Bytes.toBytes("shopId")
+        val goodsThirdCatIdCol = Bytes.toBytes("goodsThirdCatId")
+        val goodsThirdCatNameCol = Bytes.toBytes("goodsThirdCatName")
+        val goodsSecondCatIdCol = Bytes.toBytes("goodsSecondCatId")
+        val goodsSecondCatNameCol = Bytes.toBytes("goodsSecondCatName")
+        val goodsFirstCatIdCol = Bytes.toBytes("goodsFirstCatId")
+        val goodsFirstCatNameCol = Bytes.toBytes("goodsFirstCatName")
+        val areaIdCol = Bytes.toBytes("areaId")
+        val shopNameCol = Bytes.toBytes("shopName")
+        val shopCompanyCol = Bytes.toBytes("shopCompany")
+        val cityIdCol = Bytes.toBytes("cityId")
+        val cityNameCol = Bytes.toBytes("cityName")
+        val regionIdCol = Bytes.toBytes("regionId")
+        val regionNameCol = Bytes.toBytes("regionName")
+
+        put.addColumn(family, ogIdCol, Bytes.toBytes(orderGoodsWideEntity.ogId.toString))
+        put.addColumn(family, orderIdCol, Bytes.toBytes(orderGoodsWideEntity.orderId.toString))
+        put.addColumn(family, goodsIdCol, Bytes.toBytes(orderGoodsWideEntity.goodsId.toString))
+        put.addColumn(family, goodsNumCol, Bytes.toBytes(orderGoodsWideEntity.goodsNum.toString))
+        put.addColumn(family, goodsPriceCol, Bytes.toBytes(orderGoodsWideEntity.goodsPrice.toString))
+        put.addColumn(family, goodsNameCol, Bytes.toBytes(orderGoodsWideEntity.goodsName.toString))
+        put.addColumn(family, shopIdCol, Bytes.toBytes(orderGoodsWideEntity.shopId.toString))
+        put.addColumn(family, goodsThirdCatIdCol, Bytes.toBytes(orderGoodsWideEntity.goodsThirdCatId.toString))
+        put.addColumn(family, goodsThirdCatNameCol, Bytes.toBytes(orderGoodsWideEntity.goodsThirdCatName.toString))
+        put.addColumn(family, goodsSecondCatIdCol, Bytes.toBytes(orderGoodsWideEntity.goodsSecondCatId.toString))
+        put.addColumn(family, goodsSecondCatNameCol, Bytes.toBytes(orderGoodsWideEntity.goodsSecondCatName.toString))
+        put.addColumn(family, goodsFirstCatIdCol, Bytes.toBytes(orderGoodsWideEntity.goodsFirstCatId.toString))
+        put.addColumn(family, goodsFirstCatNameCol, Bytes.toBytes(orderGoodsWideEntity.goodsFirstCatName.toString))
+        put.addColumn(family, areaIdCol, Bytes.toBytes(orderGoodsWideEntity.areaId.toString))
+        put.addColumn(family, shopNameCol, Bytes.toBytes(orderGoodsWideEntity.shopName.toString))
+        put.addColumn(family, shopCompanyCol, Bytes.toBytes(orderGoodsWideEntity.shopCompany.toString))
+        put.addColumn(family, cityIdCol, Bytes.toBytes(orderGoodsWideEntity.cityId.toString))
+        put.addColumn(family, cityNameCol, Bytes.toBytes(orderGoodsWideEntity.cityName.toString))
+        put.addColumn(family, regionIdCol, Bytes.toBytes(orderGoodsWideEntity.regionId.toString))
+        put.addColumn(family, regionNameCol, Bytes.toBytes(orderGoodsWideEntity.regionName.toString))
+
+        //3：执行put操作
+        table.put(put)
+      }
+    })
   }
 }

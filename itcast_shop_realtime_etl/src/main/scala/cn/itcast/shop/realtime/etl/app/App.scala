@@ -1,6 +1,6 @@
 package cn.itcast.shop.realtime.etl.app
 
-import cn.itcast.shop.realtime.etl.process.{ClickLogDataETL, OrderDataETL, SyncDimData, orderDetailDataETL}
+import cn.itcast.shop.realtime.etl.process.{CartDataETL, ClickLogDataETL, CommentsETL, GoodsDataETL, OrderDataETL, SyncDimData, orderDetailDataETL}
 import cn.itcast.shop.realtime.etl.utils.GlobalConfigUtil
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
 import org.apache.flink.runtime.state.filesystem.FsStateBackend
@@ -79,6 +79,19 @@ object App {
 
     //5.4 订单明细数据的ETL
     val orderDetailProcess: orderDetailDataETL = new orderDetailDataETL(env)
+    orderDetailProcess.process()
+
+    //5.5 商品数据的实时ETL
+    val goodsDataProcess = new GoodsDataETL(env)
+    goodsDataProcess.process()
+
+    //5.6 购物车数据的实时ETL
+    val cartDataProcess = new CartDataETL(env)
+    cartDataProcess.process()
+
+    //5.7 评论数据的实时ETL
+    val commentsProcess = new CommentsETL(env)
+    commentsProcess.process()
 
     //TODO 6：执行任务
     env.execute()
